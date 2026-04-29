@@ -45,8 +45,8 @@ async function carregar() {
   render();
 }
 
-  async function salvar() {
-  await fetch("https://pelada-fia2026.vercel.app/api/dados", {
+async function salvar() {
+  const res = await fetch("https://pelada-fia2026.vercel.app/api/dados", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -54,7 +54,12 @@ async function carregar() {
     body: JSON.stringify({ jogadores, sha }),
   });
 
-  //await carregar(); // atualiza SHA
+  const data = await res.json();
+
+  // 🔥 Atualiza SHA corretamente
+  if (data.sha) {
+    sha = data.sha;
+  }
 }
 
   
