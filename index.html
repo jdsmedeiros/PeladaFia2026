@@ -4,203 +4,248 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Artilharia</title>
+
 <style>
-:root{--bg:#0f172a;--card:#1e293b;--muted:#334155;--text:#e5e7eb;--green:#22c55e;--blue:#3b82f6;--danger:#ef4444}
-body{margin:0;font-family:system-ui;background:var(--bg);color:var(--text);display:flex;justify-content:center;align-items:center;min-height:100vh}
-.container{background:var(--card);padding:16px;border-radius:18px;width:100%;max-width:560px}
-input,button{padding:10px;border-radius:10px;border:none}
+:root{
+  --bg:#0f172a;
+  --card:#1e293b;
+  --muted:#334155;
+  --text:#e5e7eb;
+  --green:#22c55e;
+  --blue:#3b82f6;
+  --danger:#ef4444;
+}
+
+body{
+  margin:0;
+  font-family:system-ui;
+  background:var(--bg);
+  color:var(--text);
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  min-height:100vh;
+}
+
+.container{
+  background:var(--card);
+  padding:16px;
+  border-radius:18px;
+  width:100%;
+  max-width:560px;
+}
+
+input,button{
+  padding:10px;
+  border-radius:10px;
+  border:none;
+}
+
 button{cursor:pointer}
+
 .add-btn{background:var(--green);color:white}
 .copy-btn{background:var(--blue);color:white;width:100%;margin-top:10px}
-table{width:100%;margin-top:10px;border-collapse:collapse}
-th,td{text-align:center;padding:8px}
-tr:nth-child(even){background:var(--muted)}
+
+table{
+  width:100%;
+  margin-top:10px;
+  border-collapse:collapse;
+}
+
+th,td{
+  text-align:center;
+  padding:8px;
+}
+
+tr:nth-child(even){
+  background:var(--muted);
+}
 </style>
 </head>
+
 <body>
+
 <div class="container">
 <h2>⚽ Pelada Amigos de Fia - Artilharia</h2>
+
 <div>
 <input type="text" id="nome" placeholder="Nome">
 <input type="number" id="gols" value="0">
 <button class="add-btn" id="addBtn">Adicionar</button>
 </div>
+
 <table>
-<thead><tr><th>#</th><th>Nome</th><th>Gols</th><th>Ações</th></tr></thead>
+<thead>
+<tr>
+<th>#</th>
+<th>Nome</th>
+<th>Gols</th>
+<th>Ações</th>
+</tr>
+</thead>
 <tbody id="tabela"></tbody>
 </table>
+
 <button class="copy-btn" id="copyBtn">Copiar para WhatsApp</button>
 </div>
+
 <script>
-let inicializado = false;
-let pronto = false;
 let jogadores = [];
 let sha = "";
 
-async function carregar() {
-  try {
+// =======================
+// API
+// =======================
+
+async function carregar(){
+  try{
     const res = await fetch("https://pelada-fia2026.vercel.app/api/dados");
     const data = await res.json();
 
-    if (data.content && data.content.length) {
-      jogadores = data.content;
-    }
-
+    jogadores = data.content || [];
     sha = data.sha;
-    pronto = true;
 
     render();
-  } catch (e) {
+  }catch(e){
     console.error("Erro ao carregar:", e);
   }
 }
 
-async function salvar() {
-  // 🚫 evita apagar tudo sem querer
-  if (!jogadores.length) return;
+async function salvar(){
+  try{
+    const res = await fetch("https://pelada-fia2026.vercel.app/api/dados", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ jogadores, sha }),
+    });
 
-  const res = await fetch("https://pelada-fia2026.vercel.app/api/dados", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ jogadores, sha }),
-  });
+    const data = await res.json();
 
-  const data = await res.json();
-
-  if (data.sha) {
-    sha = data.sha;
+    if(data.sha){
+      sha = data.sha;
+    }
+  }catch(e){
+    console.error("Erro ao salvar:", e);
   }
 }
 
-  const data = await res.json();
+// =======================
+// UI
+// =======================
 
-  // 🔥 Atualiza SHA corretamente
-  if (data.sha) {
-    sha = data.sha;
-  }
-}
-
-  
-
-function alterar(id,val){
-  const j=jogadores.find(j=>j.id==id);
-  if(!j) return;
-  j.gols+=val;
-  if(j.gols<0) j.gols=0;
-  render();
-}
-
-function remover(id){
-  if(confirm('Remover jogador?')){
-    jogadores=jogadores.filter(j=>j.id!=id);
-    render();
-  }
-}
-
-function editar(id){
-  const j=jogadores.find(j=>j.id==id);
-  if(!j) return;
-  const novo=prompt('Editar nome:', j.nome);
-  if(novo) {j.nome=novo; render();}
-}
-
-// EVENT DELEGATION (corrige bug da preview)
-
-document.getElementById('tabela').addEventListener('click', e=>{
-  const id=e.target.dataset.id;
-  if(e.target.classList.contains('plus')) alterar(id,1);
-  if(e.target.classList.contains('minus')) alterar(id,-1);
-  if(e.target.classList.contains('del')) remover(id);
-});
-
-document.getElementById('tabela').addEventListener('dblclick', e=>{
-  if(e.target.classList.contains('edit')){
-    editar(e.target.dataset.id);
-  }
-});
-
-// botões principais
-
-document.getElementById('addBtn').onclick=addPlayer;
-
-document.getElementById('copyBtn').onclick=()=>{
-  ordenar();
-  let texto='*Artilharia 2026*\n\n';
-  jogadores.forEach((j,i)=>{
-    texto+=`${i+1}. ${j.nome} - ${j.gols}\n`;
-  });
-  navigator.clipboard.writeText(texto);
-  alert('Copiado!');
-};
-
-// enter
-
-document.getElementById('nome').addEventListener('keypress', e=>{if(e.key==='Enter') addPlayer();});
-document.getElementById('gols').addEventListener('keypress', e=>{if(e.key==='Enter') addPlayer();});
-
-// migração
-if(jogadores.length && !jogadores[0].id){
-  jogadores=jogadores.map(j=>({...j,id:Date.now()+Math.random()}));
-}
-
-  function ordenar(){
+function ordenar(){
   jogadores.sort((a,b)=>b.gols - a.gols);
 }
 
-let carregando = true;
-
 function render(){
   ordenar();
-  const tabela=document.getElementById('tabela');
-  tabela.innerHTML='';
+
+  const tabela = document.getElementById("tabela");
+  tabela.innerHTML = "";
 
   jogadores.forEach((j,i)=>{
-    const tr=document.createElement('tr');
-    tr.innerHTML=`
+    const tr = document.createElement("tr");
+
+    tr.innerHTML = `
       <td>${i+1}</td>
-      <td class="edit" data-id="${j.id}">${j.nome}</td>
+      <td>${j.nome}</td>
       <td>${j.gols}</td>
       <td>
-        <button class="plus" data-id="${j.id}">+</button>
-        <button class="minus" data-id="${j.id}">-</button>
-        <button class="del" data-id="${j.id}">x</button>
+        <button onclick="mais('${j.id}')">+</button>
+        <button onclick="menos('${j.id}')">-</button>
+        <button onclick="remover('${j.id}')" style="background:var(--danger)">x</button>
       </td>
     `;
+
     tabela.appendChild(tr);
   });
-
-  // 🚫 PRIMEIRA render NÃO salva
-  if (!inicializado) {
-    inicializado = true;
-    return;
-  }
-
-  salvar();
 }
 
-  
-function addPlayer(){
-  const nome=document.getElementById('nome').value.trim();
-  const gols=parseInt(document.getElementById('gols').value)||0;
+// =======================
+// AÇÕES
+// =======================
 
-  if(!nome) return alert('Digite um nome');
+function addPlayer(){
+  const nome = document.getElementById("nome").value.trim();
+  const gols = parseInt(document.getElementById("gols").value) || 0;
+
+  if(!nome) return alert("Digite um nome");
 
   jogadores.push({
-    id: Date.now()+Math.random(),
+    id: Date.now().toString(),
     nome,
     gols
   });
 
-  document.getElementById('nome').value='';
-  document.getElementById('gols').value=0;
+  document.getElementById("nome").value = "";
+  document.getElementById("gols").value = 0;
 
   render();
+  salvar();
 }
 
-  carregar();
+function mais(id){
+  const j = jogadores.find(j=>j.id===id);
+  if(!j) return;
 
+  j.gols++;
+  render();
+  salvar();
+}
+
+function menos(id){
+  const j = jogadores.find(j=>j.id===id);
+  if(!j) return;
+
+  j.gols = Math.max(0, j.gols-1);
+  render();
+  salvar();
+}
+
+function remover(id){
+  if(!confirm("Remover jogador?")) return;
+
+  jogadores = jogadores.filter(j=>j.id!==id);
+
+  render();
+  salvar();
+}
+
+// =======================
+// EVENTOS
+// =======================
+
+document.getElementById("addBtn").onclick = addPlayer;
+
+document.getElementById("copyBtn").onclick = ()=>{
+  ordenar();
+
+  let texto = "*Artilharia 2026*\n\n";
+
+  jogadores.forEach((j,i)=>{
+    texto += `${i+1}. ${j.nome} - ${j.gols}\n`;
+  });
+
+  navigator.clipboard.writeText(texto);
+  alert("Copiado!");
+};
+
+document.getElementById("nome").addEventListener("keypress", e=>{
+  if(e.key==="Enter") addPlayer();
+});
+
+document.getElementById("gols").addEventListener("keypress", e=>{
+  if(e.key==="Enter") addPlayer();
+});
+
+// =======================
+// INIT
+// =======================
+
+carregar();
 </script>
+
 </body>
 </html>
