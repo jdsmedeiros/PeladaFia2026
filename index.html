@@ -32,23 +32,33 @@ tr:nth-child(even){background:var(--muted)}
 <button class="copy-btn" id="copyBtn">Copiar para WhatsApp</button>
 </div>
 <script>
+let inicializado = false;
 let pronto = false;
 let jogadores = [];
 let sha = "";
 
 async function carregar() {
-  const res = await fetch("https://pelada-fia2026.vercel.app/api/dados");
-  const data = await res.json();
+  try {
+    const res = await fetch("https://pelada-fia2026.vercel.app/api/dados");
+    const data = await res.json();
 
-  jogadores = data.content || [];
-  sha = data.sha;
+    if (data.content && data.content.length) {
+      jogadores = data.content;
+    }
 
-  pronto = true; // 🔥 LIBERA salvar
+    sha = data.sha;
+    pronto = true;
 
-  render();
+    render();
+  } catch (e) {
+    console.error("Erro ao carregar:", e);
+  }
 }
 
 async function salvar() {
+  // 🚫 evita apagar tudo sem querer
+  if (!jogadores.length) return;
+
   const res = await fetch("https://pelada-fia2026.vercel.app/api/dados", {
     method: "POST",
     headers: {
@@ -56,6 +66,13 @@ async function salvar() {
     },
     body: JSON.stringify({ jogadores, sha }),
   });
+
+  const data = await res.json();
+
+  if (data.sha) {
+    sha = data.sha;
+  }
+}
 
   const data = await res.json();
 
@@ -154,11 +171,16 @@ function render(){
     tabela.appendChild(tr);
   });
 
-  // 🔥 só salva se já carregou dados do GitHub
-  if (pronto) {
-    salvar();
+  // 🚫 PRIMEIRA render NÃO salva
+  if (!inicializado) {
+    inicializado = true;
+    return;
   }
+
+  salvar();
 }
+
+  
 function addPlayer(){
   const nome=document.getElementById('nome').value.trim();
   const gols=parseInt(document.getElementById('gols').value)||0;
