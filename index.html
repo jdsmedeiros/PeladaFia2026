@@ -32,6 +32,7 @@ tr:nth-child(even){background:var(--muted)}
 <button class="copy-btn" id="copyBtn">Copiar para WhatsApp</button>
 </div>
 <script>
+let pronto = false;
 let jogadores = [];
 let sha = "";
 
@@ -42,7 +43,7 @@ async function carregar() {
   jogadores = data.content || [];
   sha = data.sha;
 
-  carregando = false; // 🔥 libera salvar
+  pronto = true; // 🔥 LIBERA salvar
 
   render();
 }
@@ -153,12 +154,11 @@ function render(){
     tabela.appendChild(tr);
   });
 
-  // 🔥 só salva depois que terminou o carregamento inicial
-  if (!carregando) {
+  // 🔥 só salva se já carregou dados do GitHub
+  if (pronto) {
     salvar();
   }
 }
-
 function addPlayer(){
   const nome=document.getElementById('nome').value.trim();
   const gols=parseInt(document.getElementById('gols').value)||0;
