@@ -54,7 +54,7 @@ async function carregar() {
     body: JSON.stringify({ jogadores, sha }),
   });
 
-  await carregar(); // atualiza SHA
+  //await carregar(); // atualiza SHA
 }
 
   
@@ -118,6 +118,51 @@ document.getElementById('gols').addEventListener('keypress', e=>{if(e.key==='Ent
 // migração
 if(jogadores.length && !jogadores[0].id){
   jogadores=jogadores.map(j=>({...j,id:Date.now()+Math.random()}));
+}
+
+  function ordenar(){
+  jogadores.sort((a,b)=>b.gols - a.gols);
+}
+
+function render(){
+  ordenar();
+  const tabela=document.getElementById('tabela');
+  tabela.innerHTML='';
+
+  jogadores.forEach((j,i)=>{
+    const tr=document.createElement('tr');
+    tr.innerHTML=`
+      <td>${i+1}</td>
+      <td class="edit" data-id="${j.id}">${j.nome}</td>
+      <td>${j.gols}</td>
+      <td>
+        <button class="plus" data-id="${j.id}">+</button>
+        <button class="minus" data-id="${j.id}">-</button>
+        <button class="del" data-id="${j.id}">x</button>
+      </td>
+    `;
+    tabela.appendChild(tr);
+  });
+
+  salvar(); // 🔥 isso mantém sincronizado com GitHub
+}
+
+function addPlayer(){
+  const nome=document.getElementById('nome').value.trim();
+  const gols=parseInt(document.getElementById('gols').value)||0;
+
+  if(!nome) return alert('Digite um nome');
+
+  jogadores.push({
+    id: Date.now()+Math.random(),
+    nome,
+    gols
+  });
+
+  document.getElementById('nome').value='';
+  document.getElementById('gols').value=0;
+
+  render();
 }
 
   carregar();
