@@ -42,6 +42,8 @@ async function carregar() {
   jogadores = data.content || [];
   sha = data.sha;
 
+  carregando = false; // 🔥 libera salvar
+
   render();
 }
 
@@ -129,6 +131,8 @@ if(jogadores.length && !jogadores[0].id){
   jogadores.sort((a,b)=>b.gols - a.gols);
 }
 
+let carregando = true;
+
 function render(){
   ordenar();
   const tabela=document.getElementById('tabela');
@@ -149,7 +153,10 @@ function render(){
     tabela.appendChild(tr);
   });
 
-  salvar(); // 🔥 isso mantém sincronizado com GitHub
+  // 🔥 só salva depois que terminou o carregamento inicial
+  if (!carregando) {
+    salvar();
+  }
 }
 
 function addPlayer(){
@@ -172,7 +179,6 @@ function addPlayer(){
 
   carregar();
 
-render();
 </script>
 </body>
 </html>
