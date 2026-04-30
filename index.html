@@ -14,6 +14,9 @@
   --green:#22c55e;
   --blue:#3b82f6;
   --danger:#ef4444;
+  --gold:#facc15;
+  --silver:#cbd5e1;
+  --bronze:#f59e0b;
 }
 
 body{
@@ -23,42 +26,102 @@ body{
   color:var(--text);
   display:flex;
   justify-content:center;
-  align-items:center;
-  min-height:100vh;
 }
 
 .container{
-  background:var(--card);
-  padding:16px;
-  border-radius:18px;
   width:100%;
-  max-width:560px;
+  max-width:500px;
+  padding:12px;
 }
 
-input,button{
+/* HEADER */
+h2{
+  text-align:center;
+  margin-bottom:12px;
+}
+
+/* FORM */
+.form{
+  display:flex;
+  gap:6px;
+  margin-bottom:10px;
+}
+
+.form input{
+  flex:1;
   padding:10px;
   border-radius:10px;
   border:none;
 }
 
-button{cursor:pointer}
+.form button{
+  background:var(--green);
+  color:white;
+  border:none;
+  padding:10px;
+  border-radius:10px;
+}
 
-.add-btn{background:var(--green);color:white}
-.copy-btn{background:var(--blue);color:white;width:100%;margin-top:10px}
+/* LISTA */
+.lista{
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+}
 
-table{
-  width:100%;
+/* CARD */
+.card{
+  background:var(--card);
+  border-radius:14px;
+  padding:10px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  box-shadow:0 4px 10px rgba(0,0,0,0.3);
+}
+
+/* TOP 3 */
+.top1{border-left:5px solid var(--gold)}
+.top2{border-left:5px solid var(--silver)}
+.top3{border-left:5px solid var(--bronze)}
+
+.info{
+  display:flex;
+  flex-direction:column;
+}
+
+.nome{
+  font-weight:bold;
+  cursor:pointer;
+}
+
+.gols{
+  font-size:14px;
+  color:#aaa;
+}
+
+/* BOTÕES */
+.actions button{
+  margin-left:4px;
+  border:none;
+  padding:6px 10px;
+  border-radius:8px;
+  cursor:pointer;
+}
+
+.plus{background:var(--green)}
+.minus{background:#64748b}
+.del{background:var(--danger)}
+
+/* COPY */
+.copy{
   margin-top:10px;
-  border-collapse:collapse;
-}
-
-th,td{
-  text-align:center;
-  padding:8px;
-}
-
-tr:nth-child(even){
-  background:var(--muted);
+  width:100%;
+  background:var(--blue);
+  color:white;
+  border:none;
+  padding:10px;
+  border-radius:10px;
 }
 </style>
 </head>
@@ -66,75 +129,45 @@ tr:nth-child(even){
 <body>
 
 <div class="container">
-<h2>⚽ Pelada Amigos de Fia - Artilharia</h2>
 
-<div>
-<input type="text" id="nome" placeholder="Nome">
-<input type="number" id="gols" value="0">
-<button class="add-btn" id="addBtn">Adicionar</button>
+<h2>⚽ Artilharia</h2>
+
+<div class="form">
+  <input type="text" id="nome" placeholder="Nome">
+  <input type="number" id="gols" value="0">
+  <button onclick="addPlayer()">+</button>
 </div>
 
-<table>
-<thead>
-<tr>
-<th>#</th>
-<th>Nome</th>
-<th>Gols</th>
-<th>Ações</th>
-</tr>
-</thead>
-<tbody id="tabela"></tbody>
-</table>
+<div id="lista" class="lista"></div>
 
-<button class="copy-btn" id="copyBtn">Copiar para WhatsApp</button>
+<button class="copy" onclick="copiar()">Copiar para WhatsApp</button>
+
 </div>
 
 <script>
 let jogadores = [];
 let sha = "";
 
-// =======================
 // API
-// =======================
-
 async function carregar(){
-  try{
-    const res = await fetch("https://pelada-fia2026.vercel.app/api/dados");
-    const data = await res.json();
+  const res = await fetch("https://pelada-fia2026.vercel.app/api/dados");
+  const data = await res.json();
 
-    jogadores = data.content || [];
-    sha = data.sha;
+  jogadores = data.content || [];
+  sha = data.sha;
 
-    render();
-  }catch(e){
-    console.error("Erro ao carregar:", e);
-  }
+  render();
 }
 
 async function salvar(){
-  try{
-    const res = await fetch("https://pelada-fia2026.vercel.app/api/dados", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ jogadores, sha }),
-    });
-
-    const data = await res.json();
-
-    if(data.sha){
-      sha = data.sha;
-    }
-  }catch(e){
-    console.error("Erro ao salvar:", e);
-  }
+  await fetch("https://pelada-fia2026.vercel.app/api/dados", {
+    method:"POST",
+    headers:{ "Content-Type":"application/json" },
+    body: JSON.stringify({ jogadores, sha })
+  });
 }
 
-// =======================
 // UI
-// =======================
-
 function ordenar(){
   jogadores.sort((a,b)=>b.gols - a.gols);
 }
@@ -142,36 +175,44 @@ function ordenar(){
 function render(){
   ordenar();
 
-  const tabela = document.getElementById("tabela");
-  tabela.innerHTML = "";
+  const lista = document.getElementById("lista");
+  lista.innerHTML = "";
 
   jogadores.forEach((j,i)=>{
-    const tr = document.createElement("tr");
+    const div = document.createElement("div");
 
-    tr.innerHTML = `
-      <td>${i+1}</td>
-      <td>${j.nome}</td>
-      <td>${j.gols}</td>
-      <td>
-        <button onclick="mais('${j.id}')">+</button>
-        <button onclick="menos('${j.id}')">-</button>
-        <button onclick="remover('${j.id}')" style="background:var(--danger)">x</button>
-      </td>
+    let classe = "";
+    if(i===0) classe="top1";
+    else if(i===1) classe="top2";
+    else if(i===2) classe="top3";
+
+    div.className = "card "+classe;
+
+    div.innerHTML = `
+      <div class="info">
+        <span class="nome" ondblclick="editar('${j.id}')">
+          ${i+1}. ${j.nome}
+        </span>
+        <span class="gols">${j.gols} gols</span>
+      </div>
+
+      <div class="actions">
+        <button class="plus" onclick="mais('${j.id}')">+</button>
+        <button class="minus" onclick="menos('${j.id}')">-</button>
+        <button class="del" onclick="remover('${j.id}')">x</button>
+      </div>
     `;
 
-    tabela.appendChild(tr);
+    lista.appendChild(div);
   });
 }
 
-// =======================
-// AÇÕES
-// =======================
-
+// ações
 function addPlayer(){
   const nome = document.getElementById("nome").value.trim();
   const gols = parseInt(document.getElementById("gols").value) || 0;
 
-  if(!nome) return alert("Digite um nome");
+  if(!nome) return;
 
   jogadores.push({
     id: Date.now().toString(),
@@ -179,8 +220,8 @@ function addPlayer(){
     gols
   });
 
-  document.getElementById("nome").value = "";
-  document.getElementById("gols").value = 0;
+  document.getElementById("nome").value="";
+  document.getElementById("gols").value=0;
 
   render();
   salvar();
@@ -188,8 +229,6 @@ function addPlayer(){
 
 function mais(id){
   const j = jogadores.find(j=>j.id===id);
-  if(!j) return;
-
   j.gols++;
   render();
   salvar();
@@ -197,53 +236,41 @@ function mais(id){
 
 function menos(id){
   const j = jogadores.find(j=>j.id===id);
-  if(!j) return;
-
   j.gols = Math.max(0, j.gols-1);
   render();
   salvar();
 }
 
 function remover(id){
-  if(!confirm("Remover jogador?")) return;
-
+  if(!confirm("Remover?")) return;
   jogadores = jogadores.filter(j=>j.id!==id);
-
   render();
   salvar();
 }
 
-// =======================
-// EVENTOS
-// =======================
+function editar(id){
+  const j = jogadores.find(j=>j.id===id);
+  const novo = prompt("Editar nome:", j.nome);
+  if(novo){
+    j.nome = novo;
+    render();
+    salvar();
+  }
+}
 
-document.getElementById("addBtn").onclick = addPlayer;
-
-document.getElementById("copyBtn").onclick = ()=>{
+function copiar(){
   ordenar();
-
-  let texto = "*Artilharia 2026*\n\n";
+  let texto="*Artilharia*\\n\\n";
 
   jogadores.forEach((j,i)=>{
-    texto += `${i+1}. ${j.nome} - ${j.gols}\n`;
+    texto+=`${i+1}. ${j.nome} - ${j.gols}\\n`;
   });
 
   navigator.clipboard.writeText(texto);
   alert("Copiado!");
-};
+}
 
-document.getElementById("nome").addEventListener("keypress", e=>{
-  if(e.key==="Enter") addPlayer();
-});
-
-document.getElementById("gols").addEventListener("keypress", e=>{
-  if(e.key==="Enter") addPlayer();
-});
-
-// =======================
-// INIT
-// =======================
-
+// init
 carregar();
 </script>
 
