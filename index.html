@@ -260,10 +260,11 @@ function editar(id){
 
 function copiar(){
   ordenar();
-  let texto="*Artilharia*\\n\\n";
+
+  let texto = "*Artilharia*\n\n";
 
   jogadores.forEach((j,i)=>{
-    texto+=`${i+1}. ${j.nome} - ${j.gols}\\n`;
+    texto += `${i+1}. ${j.nome} - ${j.gols}\n`;
   });
 
   navigator.clipboard.writeText(texto);
