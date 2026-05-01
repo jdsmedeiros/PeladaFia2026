@@ -261,10 +261,16 @@ function editar(id){
 function copiar(){
   ordenar();
 
-  let texto = "*Artilharia*\n\n";
+  let texto = "🏆 *Artilharia*\n\n";
 
   jogadores.forEach((j,i)=>{
-    texto += `${i+1}. ${j.nome} - ${j.gols}\n`;
+    let pos = `${i+1}.`;
+
+    if(i === 0) pos = "🥇 1.";
+    else if(i === 1) pos = "🥈 2.";
+    else if(i === 2) pos = "🥉 3.";
+
+    texto += `${pos} ${j.nome} - ${j.gols}\n`;
   });
 
   navigator.clipboard.writeText(texto);
