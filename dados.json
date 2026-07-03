@@ -7,7 +7,7 @@
   {
     "id": "1777552554954",
     "nome": "Matheus",
-    "gols": 16
+    "gols": 17
   },
   {
     "id": "1777552599050",
@@ -35,6 +35,11 @@
     "gols": 5
   },
   {
+    "id": "1777596494235",
+    "nome": "Juninho Morais",
+    "gols": 5
+  },
+  {
     "id": "1777552651282",
     "nome": "Joaninha",
     "gols": 4
@@ -57,11 +62,6 @@
   {
     "id": "1777552701679",
     "nome": "Thalles",
-    "gols": 4
-  },
-  {
-    "id": "1777596494235",
-    "nome": "Juninho Morais",
     "gols": 4
   },
   {
