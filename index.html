@@ -273,7 +273,8 @@ function copiar(){
     texto += `${pos} ${j.nome} - ${j.gols}\n`;
   });
 
-  navigator.clipboard.writeText(texto);
+  // O .trim() aqui remove a quebra de linha extra do final
+  navigator.clipboard.writeText(texto.trim());
   alert("Copiado!");
 }
 
